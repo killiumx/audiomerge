@@ -357,7 +357,7 @@
 
 <div class="header">
   <div class="logo">
-    <div class="logo-icon">âš¡</div>
+    <div class="logo-icon">⚡</div>
     <span>FiveM Merger</span>
     <span class="logo-sub">Engine File Merger</span>
   </div>
@@ -371,7 +371,7 @@
       <div class="section-title">Upload Resources</div>
       <div class="upload-zone" id="dropZone">
         <input type="file" id="folderInput" webkitdirectory multiple>
-        <div class="upload-icon">ðŸ“</div>
+        <div class="upload-icon">📁</div>
         <div class="upload-title">Drop resource folder here</div>
         <div class="upload-sub">or <span>click to browse</span></div>
         <div class="upload-sub" style="margin-top:6px;">Select a folder with one or many resources</div>
@@ -379,21 +379,21 @@
     </div>
 
     <div class="section-title" style="padding:0 16px;margin-bottom:8px;">
-      <span id="resourceCount">Resources <span style="color:var(--text-dim)">â€”</span></span>
+      <span id="resourceCount">Resources <span style="color:var(--text-dim)">—</span></span>
     </div>
     <div class="resource-list" id="resourceList">
       <div class="empty-state">
-        <div class="empty-state-icon">ðŸ“¦</div>
+        <div class="empty-state-icon">📦</div>
         <div class="empty-state-text">No resources loaded yet.<br>Upload a folder to get started.</div>
       </div>
     </div>
 
     <div class="sidebar-footer">
       <button class="btn btn-primary" id="mergeAllBtn" disabled onclick="mergeAll()">
-        <span id="mergeIcon">âš¡</span> Merge All Resources
+        <span id="mergeIcon">⚡</span> Merge All Resources
       </button>
       <button class="btn btn-secondary" id="downloadZipBtn" disabled onclick="downloadZip()">
-        â¬‡ Download All as ZIP
+        ⬇ Download All as ZIP
       </button>
     </div>
   </div>
@@ -430,7 +430,7 @@
 
     <div class="content-area" id="contentArea">
       <div class="welcome">
-        <div class="welcome-icon">âš¡</div>
+        <div class="welcome-icon">⚡</div>
         <div class="welcome-title">Ready to Merge</div>
         <div class="welcome-text">Upload a resource folder (or a folder containing multiple resources), then click Merge All to combine your Lua scripts.</div>
       </div>
@@ -467,7 +467,7 @@ function readBin(f){return new Promise((res,rej)=>{const r=new FileReader();r.on
 function isScript(p){const lp=p.toLowerCase();if(lp.endsWith('.js')&&(lp.includes('/html/')||lp.includes('/ui/')||lp.includes('/nui/')||lp.includes('/web/')))return false;return lp.endsWith('.lua')||lp.endsWith('.js');}
 function isManifest(p){const fn=p.split('/').pop();return fn==='fxmanifest.lua'||fn==='__resource.lua';}
 
-// Canonical destination path â€” reorganise into flat standard folders
+// Canonical destination path — reorganise into flat standard folders
 function destPath(relPath) {
   const parts = relPath.split('/');
   const top   = parts[0].toLowerCase();
@@ -513,7 +513,7 @@ function parseManifest(raw) {
   return r;
 }
 function nk(k){return k==='client_script'?'client_scripts':k==='server_script'?'server_scripts':k==='shared_script'?'shared_scripts':k;}
-function mGlob(pat,fp){return new RegExp('^'+pat.replace(/\./g,'\\.').replace(/\*\*/g,'Â§').replace(/\*/g,'[^/]*').replace(/Â§/g,'.*')+'$').test(fp);}
+function mGlob(pat,fp){return new RegExp('^'+pat.replace(/\./g,'\\.').replace(/\*\*/g,'§').replace(/\*/g,'[^/]*').replace(/§/g,'.*')+'$').test(fp);}
 
 async function handleFiles(fileList) {
   log('Reading uploaded files...','info');
@@ -525,7 +525,7 @@ async function handleFiles(fileList) {
   }
   const mPaths=Object.keys(fileMap).filter(p=>p.endsWith('fxmanifest.lua')||p.endsWith('__resource.lua'));
   if(!mPaths.length){log('No fxmanifest.lua found.','error');return;}
-  log(`Found ${mPaths.length} manifest(s) â€” will merge ALL into one.`,'success');
+  log(`Found ${mPaths.length} manifest(s) — will merge ALL into one.`,'success');
   const resources=[];
   for(const mp of mPaths){
     const resDir=mp.substring(0,mp.lastIndexOf('/')+1);
@@ -540,12 +540,12 @@ async function handleFiles(fileList) {
     }
     const name=parsed.name||resDir.replace(/\/$/,'').split('/').pop()||'resource';
     const aC=Object.keys(assetFiles).length;
-    log(`  â†³ ${name}: ${parsed.client_scripts.length}C ${parsed.server_scripts.length}S ${parsed.shared_scripts.length}SH Â· ${aC} assets Â· ${parsed.data_files.length} data_file`,'info');
+    log(`  ↳ ${name}: ${parsed.client_scripts.length}C ${parsed.server_scripts.length}S ${parsed.shared_scripts.length}SH · ${aC} assets · ${parsed.data_files.length} data_file`,'info');
     resources.push({name,resDir,parsed,files:resFiles,assetFiles});
   }
   state.resources=resources; state.output=null;
   document.getElementById('mergeAllBtn').disabled=false;
-  document.getElementById('resourceCount').innerHTML=`<span style="color:var(--amber);font-weight:700;">${resources.length}</span> resource${resources.length>1?'s':''} â†’ <span style="color:var(--green);font-weight:700;">1 output</span>`;
+  document.getElementById('resourceCount').innerHTML=`<span style="color:var(--amber);font-weight:700;">${resources.length}</span> resource${resources.length>1?'s':''} → <span style="color:var(--green);font-weight:700;">1 output</span>`;
   renderResourceList(); renderContent();
 }
 
@@ -561,14 +561,22 @@ function buildManifest(outputName, parsedList, typesUsed, consolidatedFiles) {
   if(typesUsed.includes('server'))m+=`server_scripts  { 'merged.lua' }\n`;
   if(typesUsed.length)m+='\n';
 
-  // files{} from actual consolidated folders
+  // files{} — merge every pattern from every manifest's files{} block.
+  // Keeps exact globs like "audioconfig/*.dat151.rel" as written.
+  // For any asset folder with no existing pattern, fall back to folder/**/*
+  const allPatterns=[...new Set(parsedList.flatMap(p=>p.files_entries))];
   const topFolders=[...new Set(Object.keys(consolidatedFiles).map(p=>p.split('/')[0]))].sort();
-  if(topFolders.length){m+=`files {\n${topFolders.map(f=>`  '${f}/**/*'`).join(',\n')}\n}\n\n`;}
+  for(const f of topFolders){
+    if(!allPatterns.some(pat=>pat===f+'/**/*'||pat.startsWith(f+'/')))
+      allPatterns.push(f+'/**/*');
+  }
+  const filesBlock=[...new Set(allPatterns)].sort();
+  if(filesBlock.length){m+=`files {\n${filesBlock.map(e=>`  '${e}'`).join(',\n')}\n}\n\n`;}
 
   const uiPage=parsedList.map(p=>p.ui_page).find(u=>u);
   if(uiPage)m+=`ui_page '${uiPage}'\n\n`;
 
-  // data_file â€” all merged, paths remapped, deduped, sorted by type
+  // data_file — all merged, paths remapped, deduped, sorted by type
   const seen=new Set(),allDf=[];
   for(const p of parsedList)for(const df of p.data_files){
     const np=remapDfPath(df.path);
@@ -594,13 +602,13 @@ async function runMerge() {
   const outputName=res.length===1?res[0].name:'merged_resource';
   const out={name:outputName,merged:null,manifest:null,files:{},stats:{resources:res.length,scripts:0,scriptBytes:0,assets:0,assetBytes:0,folders:{},conflicts:[]}};
 
-  // 1 â€” Scripts
-  let lua=`-- â–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆ\n-- merged.lua  â€”  FiveM Engine File Merger\n-- Resources  : ${res.map(r=>r.name).join(', ')}\n-- Generated  : ${new Date().toISOString()}\n-- â–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆ\n\n`;
+  // 1 — Scripts
+  let lua=`-- ████████████████████████████████████████████████████████████\n-- merged.lua  —  FiveM Engine File Merger\n-- Resources  : ${res.map(r=>r.name).join(', ')}\n-- Generated  : ${new Date().toISOString()}\n-- ████████████████████████████████████████████████████████████\n\n`;
   const typesUsed=[];
   for(const r of res){
     const hasS=['shared','client','server'].some(t=>r.parsed[t+'_scripts']?.length);
     if(!hasS)continue;
-    lua+=`\n-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•\n-- RESOURCE: ${r.name}\n-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•\n\n`;
+    lua+=`\n-- ════════════════════════════════════════════════════════════\n-- RESOURCE: ${r.name}\n-- ════════════════════════════════════════════════════════════\n\n`;
     for(const type of ['shared','client','server']){
       const scripts=r.parsed[type+'_scripts'];if(!scripts?.length)continue;
       lua+=`-- [${type}]\n`;
@@ -608,19 +616,19 @@ async function runMerge() {
       for(const pat of scripts){
         const keys=pat.includes('*')?Object.keys(r.files).filter(k=>mGlob(pat,k)).sort():[pat];
         for(const key of keys){
-          if(!r.files[key]){log(`  âš  Missing: ${r.name}/${key}`,'warn');continue;}
+          if(!r.files[key]){log(`  ⚠ Missing: ${r.name}/${key}`,'warn');continue;}
           const src=await readText(r.files[key]);
           lua+=`-- ${key}\n${src.trim()}\n\n`;
           cnt++;out.stats.scripts++;out.stats.scriptBytes+=src.length;
         }
       }
       if(cnt&&!typesUsed.includes(type))typesUsed.push(type);
-      if(cnt)log(`    âœ“ ${cnt} ${type} scripts from ${r.name}`,'success');
+      if(cnt)log(`    ✓ ${cnt} ${type} scripts from ${r.name}`,'success');
     }
   }
   out.merged={content:lua,typesUsed};
 
-  // 2 â€” Consolidate assets into canonical folders
+  // 2 — Consolidate assets into canonical folders
   for(const r of res){
     for(const [relPath,file] of Object.entries(r.assetFiles)){
       const dest=destPath(relPath);
@@ -631,7 +639,7 @@ async function runMerge() {
         const nd=`${base}_${r.name.replace(/[^a-zA-Z0-9]/g,'_')}${ext}`;
         out.files[nd]=file;
         out.stats.conflicts.push({from:`${r.name}/${relPath}`,to:nd});
-        log(`  âš  Conflict: ${dest} â†’ ${nd}`,'warn');
+        log(`  ⚠ Conflict: ${dest} → ${nd}`,'warn');
       } else {
         out.files[dest]=file;
       }
@@ -640,9 +648,9 @@ async function runMerge() {
       out.stats.folders[topFolder].count++;out.stats.folders[topFolder].bytes+=file.size||0;
     }
   }
-  log(`  âœ“ ${out.stats.assets} assets â†’ ${Object.keys(out.stats.folders).join(', ')}`,'success');
+  log(`  ✓ ${out.stats.assets} assets → ${Object.keys(out.stats.folders).join(', ')}`,'success');
 
-  // 3 â€” Manifest
+  // 3 — Manifest
   out.manifest=buildManifest(outputName,res.map(r=>r.parsed),typesUsed,out.files);
   return out;
 }
@@ -652,17 +660,17 @@ async function mergeAll() {
   state.merging=true;
   const btn=document.getElementById('mergeAllBtn');
   btn.disabled=true;btn.innerHTML='<span class="spinner"></span> Merging...';
-  log(`â”€â”€â”€â”€â”€â”€â”€ Merging ${state.resources.length} resource(s) into one â”€â”€â”€â”€â”€â”€â”€`,'header');
+  log(`─────── Merging ${state.resources.length} resource(s) into one ───────`,'header');
   try{
     state.output=await runMerge();
-    log(`âœ“ Done â€” ${state.output.stats.scripts} scripts + ${state.output.stats.assets} assets â†’ 1 output`,'success');
+    log(`✓ Done — ${state.output.stats.scripts} scripts + ${state.output.stats.assets} assets → 1 output`,'success');
     document.getElementById('downloadZipBtn').disabled=false;
     document.getElementById('summaryBar').style.display='flex';
     document.getElementById('sumMerged').textContent=state.resources.length;
     document.getElementById('sumFiles').textContent=state.output.stats.scripts;
     document.getElementById('sumSize').textContent=fmt(state.output.stats.scriptBytes+state.output.stats.assetBytes);
-  }catch(e){log(`âœ— Error: ${e.message}`,'error');}
-  btn.disabled=false;btn.innerHTML='âš¡ Merge All Resources';
+  }catch(e){log(`✗ Error: ${e.message}`,'error');}
+  btn.disabled=false;btn.innerHTML='⚡ Merge All Resources';
   state.merging=false;renderContent();
 }
 
@@ -682,7 +690,7 @@ async function downloadZip(){
   log(`Packing ${entries.length} assets...`,'info');
   for(const [dest,file] of entries){
     try{folder.file(dest,await readBin(file));total++;}
-    catch(e){log(`  âš  Could not pack: ${dest}`,'warn');}
+    catch(e){log(`  ⚠ Could not pack: ${dest}`,'warn');}
   }
   log('Generating ZIP...','info');
   const blob=await zip.generateAsync({type:'blob',compression:'DEFLATE'});
@@ -690,19 +698,19 @@ async function downloadZip(){
   a.href=URL.createObjectURL(blob);
   a.download=`${o.name}_merged.zip`;
   a.click();URL.revokeObjectURL(a.href);
-  log(`âœ“ Downloaded ${o.name}_merged.zip â€” ${total} assets.`,'success');
+  log(`✓ Downloaded ${o.name}_merged.zip — ${total} assets.`,'success');
 }
 
 function renderResourceList(){
   const el=document.getElementById('resourceList');
-  if(!state.resources.length){el.innerHTML=`<div class="empty-state"><div class="empty-state-icon">ðŸ“¦</div><div class="empty-state-text">No resources loaded yet.<br>Upload a folder to get started.</div></div>`;return;}
+  if(!state.resources.length){el.innerHTML=`<div class="empty-state"><div class="empty-state-icon">📦</div><div class="empty-state-text">No resources loaded yet.<br>Upload a folder to get started.</div></div>`;return;}
   el.innerHTML=state.resources.map((res,i)=>{
     const p=res.parsed,aC=Object.keys(res.assetFiles).length;
     return `<div class="resource-card" style="cursor:default;">
-      <div class="res-icon">ðŸ“¦</div>
+      <div class="res-icon">📦</div>
       <div class="res-info">
         <div class="res-name">${res.name}</div>
-        <div class="res-meta">${p.client_scripts.length+p.server_scripts.length+p.shared_scripts.length} scripts Â· ${aC} assets Â· ${p.data_files.length} data_file</div>
+        <div class="res-meta">${p.client_scripts.length+p.server_scripts.length+p.shared_scripts.length} scripts · ${aC} assets · ${p.data_files.length} data_file</div>
         <div class="res-badges">
           ${p.client_scripts.length?`<span class="badge badge-client">C ${p.client_scripts.length}</span>`:''}
           ${p.server_scripts.length?`<span class="badge badge-server">S ${p.server_scripts.length}</span>`:''}
@@ -715,7 +723,7 @@ function renderResourceList(){
     </div>`;
   }).join('');
   if(state.resources.length>1)
-    el.innerHTML+=`<div style="text-align:center;padding:10px 0 4px;font-size:11px;font-weight:600;color:var(--green);letter-spacing:.5px;">â†“ ALL merged into ONE output â†“</div>`;
+    el.innerHTML+=`<div style="text-align:center;padding:10px 0 4px;font-size:11px;font-weight:600;color:var(--green);letter-spacing:.5px;">↓ ALL merged into ONE output ↓</div>`;
 }
 
 function switchTab(tab,btn){
@@ -724,13 +732,13 @@ function switchTab(tab,btn){
   btn.classList.add('active');renderContent();
 }
 
-const FM={audioconfig:{icon:'ðŸŽµ',color:'#f5a62a',label:'Audio Config (.dat files)'},sfx:{icon:'ðŸ”Š',color:'#5b9cf6',label:'SFX Wavepacks (.awc DLC folders)'},stream:{icon:'ðŸ“¡',color:'#5b9cf6',label:'Stream assets'},sounds:{icon:'ðŸ”Š',color:'#f5a62a',label:'Sound files'},html:{icon:'ðŸŒ',color:'#3ecf6e',label:'NUI / HTML'},data:{icon:'âš™ï¸',color:'#b47eff',label:'Data / config files'}};
+const FM={audioconfig:{icon:'🎵',color:'#f5a62a',label:'Audio Config (.dat files)'},sfx:{icon:'🔊',color:'#5b9cf6',label:'SFX Wavepacks (.awc DLC folders)'},stream:{icon:'📡',color:'#5b9cf6',label:'Stream assets'},sounds:{icon:'🔊',color:'#f5a62a',label:'Sound files'},html:{icon:'🌐',color:'#3ecf6e',label:'NUI / HTML'},data:{icon:'⚙️',color:'#b47eff',label:'Data / config files'}};
 
 function renderContent(){
   const area=document.getElementById('contentArea');
   const o=state.output;
-  if(!state.resources.length){area.innerHTML=`<div class="welcome"><div class="welcome-icon">âš¡</div><div class="welcome-title">Ready to Merge</div><div class="welcome-text">Upload a folder with one or more FiveM resources. All scripts, audioconfig, sfx, stream and manifest entries get merged into one single output.</div></div>`;return;}
-  if(!o){area.innerHTML=`<div class="welcome"><div class="welcome-icon">âš™ï¸</div><div class="welcome-title">${state.resources.length} Resource${state.resources.length>1?'s':''} Ready</div><div class="welcome-text">Click "Merge All Resources" â€” all files will be reorganised into one output folder.</div></div>`;return;}
+  if(!state.resources.length){area.innerHTML=`<div class="welcome"><div class="welcome-icon">⚡</div><div class="welcome-title">Ready to Merge</div><div class="welcome-text">Upload a folder with one or more FiveM resources. All scripts, audioconfig, sfx, stream and manifest entries get merged into one single output.</div></div>`;return;}
+  if(!o){area.innerHTML=`<div class="welcome"><div class="welcome-icon">⚙️</div><div class="welcome-title">${state.resources.length} Resource${state.resources.length>1?'s':''} Ready</div><div class="welcome-text">Click "Merge All Resources" — all files will be reorganised into one output folder.</div></div>`;return;}
   if(state.activeTab==='output')  area.innerHTML=`<div class="output-grid">${renderOutputCard(o)}</div>`;
   if(state.activeTab==='manifest')area.innerHTML=`<div class="output-grid">${renderManifestCard(o)}</div>`;
   if(state.activeTab==='preview') area.innerHTML=renderPreviewCard(o);
@@ -742,32 +750,32 @@ function renderOutputCard(o){
   const dfByType={};for(const df of allDf){if(!dfByType[df.type])dfByType[df.type]=0;dfByType[df.type]++;}
 
   const folderRows=Object.entries(o.stats.folders).sort((a,b)=>a[0].localeCompare(b[0])).map(([folder,info])=>{
-    const meta=FM[folder]||{icon:'ðŸ“',color:'#b47eff',label:folder};
+    const meta=FM[folder]||{icon:'📁',color:'#b47eff',label:folder};
     const contributors=[...new Set(state.resources.filter(r=>Object.keys(r.assetFiles).some(p=>destPath(p).split('/')[0]===folder)).map(r=>r.name))];
     return `<div class="file-row">
       <div class="file-row-icon" style="background:${meta.color}22;font-size:15px;">${meta.icon}</div>
       <div class="file-row-info">
         <div class="file-row-name" style="font-family:var(--mono);color:${meta.color};font-size:13px;">${folder}/</div>
-        <div class="file-row-size">${meta.label} Â· ${info.count} file${info.count>1?'s':''} Â· ${fmt(info.bytes)}${contributors.length>1?` â† from: ${contributors.join(', ')}`:''}</div>
+        <div class="file-row-size">${meta.label} · ${info.count} file${info.count>1?'s':''} · ${fmt(info.bytes)}${contributors.length>1?` ← from: ${contributors.join(', ')}`:''}</div>
       </div>
       <span style="font-size:11px;font-weight:700;color:${meta.color};border:1px solid ${meta.color}55;padding:2px 8px;border-radius:4px;">${info.count}</span>
     </div>`;
   }).join('');
 
   const dfRows=Object.entries(dfByType).sort().map(([t,c])=>`<div class="file-row">
-    <div class="file-row-icon" style="background:rgba(91,156,246,0.12);font-size:12px;">ðŸ“‹</div>
+    <div class="file-row-icon" style="background:rgba(91,156,246,0.12);font-size:12px;">📋</div>
     <div class="file-row-info">
       <div class="file-row-name" style="font-family:var(--mono);color:#5b9cf6;font-size:11px;">${t}</div>
-      <div class="file-row-size">${c} entr${c>1?'ies':'y'} â€” all in manifest</div>
+      <div class="file-row-size">${c} entr${c>1?'ies':'y'} — all in manifest</div>
     </div>
-    <span style="font-size:11px;font-weight:700;color:#5b9cf6;border:1px solid rgba(91,156,246,0.4);padding:2px 8px;border-radius:4px;">Ã—${c}</span>
+    <span style="font-size:11px;font-weight:700;color:#5b9cf6;border:1px solid rgba(91,156,246,0.4);padding:2px 8px;border-radius:4px;">×${c}</span>
   </div>`).join('');
 
   return `<div class="output-card">
     <div class="output-card-header">
-      <span style="font-size:18px">âœ…</span>
+      <span style="font-size:18px">✅</span>
       <span class="output-card-title">${o.name}</span>
-      <span class="output-card-meta">${o.stats.resources} resources â†’ 1 output Â· ${fmt(totalB)}</span>
+      <span class="output-card-meta">${o.stats.resources} resources → 1 output · ${fmt(totalB)}</span>
     </div>
     <div class="output-card-body">
       <div class="merge-stats">
@@ -778,21 +786,21 @@ function renderOutputCard(o){
 
       <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim);margin:12px 0 6px;">Output files</div>
       <div class="file-row">
-        <div class="file-row-icon" style="background:var(--amber-dim);">âš¡</div>
-        <div class="file-row-info"><div class="file-row-name" style="color:var(--amber)">merged.lua</div><div class="file-row-size">${o.stats.scripts} scripts Â· ${fmt(o.stats.scriptBytes)} Â· [${o.merged.typesUsed.join(', ')||'none'}]</div></div>
-        <button class="file-row-dl" onclick="downloadFile(state.output.merged.content,'merged.lua')">â¬‡</button>
+        <div class="file-row-icon" style="background:var(--amber-dim);">⚡</div>
+        <div class="file-row-info"><div class="file-row-name" style="color:var(--amber)">merged.lua</div><div class="file-row-size">${o.stats.scripts} scripts · ${fmt(o.stats.scriptBytes)} · [${o.merged.typesUsed.join(', ')||'none'}]</div></div>
+        <button class="file-row-dl" onclick="downloadFile(state.output.merged.content,'merged.lua')">⬇</button>
       </div>
       <div class="file-row">
-        <div class="file-row-icon manifest">ðŸ“„</div>
+        <div class="file-row-icon manifest">📄</div>
         <div class="file-row-info"><div class="file-row-name">fxmanifest.lua</div><div class="file-row-size">All files{} + data_file entries combined</div></div>
-        <button class="file-row-dl" onclick="downloadFile(state.output.manifest,'fxmanifest.lua')">â¬‡</button>
+        <button class="file-row-dl" onclick="downloadFile(state.output.manifest,'fxmanifest.lua')">⬇</button>
       </div>
 
       ${Object.keys(o.stats.folders).length?`<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim);margin:14px 0 6px;">Reorganised asset folders</div>${folderRows}`:''}
       ${allDf.length?`<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim);margin:14px 0 6px;">data_file entries in manifest</div>${dfRows}`:''}
       ${o.stats.conflicts.length?`<div style="margin-top:10px;padding:8px 12px;background:rgba(255,85,85,0.06);border:1px solid rgba(255,85,85,0.2);border-radius:6px;">
-        <div style="font-size:11px;color:#ff9090;font-weight:600;margin-bottom:4px;">âš  ${o.stats.conflicts.length} filename conflict${o.stats.conflicts.length>1?'s':''} auto-resolved</div>
-        ${o.stats.conflicts.map(c=>`<div style="font-size:10px;color:var(--text-muted);font-family:var(--mono);">${c.from} â†’ ${c.to}</div>`).join('')}
+        <div style="font-size:11px;color:#ff9090;font-weight:600;margin-bottom:4px;">⚠ ${o.stats.conflicts.length} filename conflict${o.stats.conflicts.length>1?'s':''} auto-resolved</div>
+        ${o.stats.conflicts.map(c=>`<div style="font-size:10px;color:var(--text-muted);font-family:var(--mono);">${c.from} → ${c.to}</div>`).join('')}
       </div>`:''}
     </div>
   </div>`;
@@ -800,12 +808,12 @@ function renderOutputCard(o){
 
 function renderManifestCard(o){
   const escaped=o.manifest.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  return `<div class="output-card"><div class="output-card-header"><span style="font-size:16px">ðŸ“„</span><span class="output-card-title">${o.name} â€” fxmanifest.lua</span><button class="file-row-dl" style="margin-left:auto" onclick="downloadFile(state.output.manifest,'fxmanifest.lua')">â¬‡ Download</button></div><div class="output-card-body"><div class="code-preview">${escaped}</div></div></div>`;
+  return `<div class="output-card"><div class="output-card-header"><span style="font-size:16px">📄</span><span class="output-card-title">${o.name} — fxmanifest.lua</span><button class="file-row-dl" style="margin-left:auto" onclick="downloadFile(state.output.manifest,'fxmanifest.lua')">⬇ Download</button></div><div class="output-card-body"><div class="code-preview">${escaped}</div></div></div>`;
 }
 
 function renderPreviewCard(o){
   const preview=o.merged.content.slice(0,2500).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  return `<div class="output-grid"><div class="output-card"><div class="output-card-header"><span class="output-card-title">${o.name} / merged.lua</span><span class="output-card-meta">${fmt(o.merged.content.length)}</span></div><div class="output-card-body"><div class="code-preview">${preview}${o.merged.content.length>2500?'\n\n... truncated â€” download for full file':''}</div></div></div></div>`;
+  return `<div class="output-grid"><div class="output-card"><div class="output-card-header"><span class="output-card-title">${o.name} / merged.lua</span><span class="output-card-meta">${fmt(o.merged.content.length)}</span></div><div class="output-card-body"><div class="code-preview">${preview}${o.merged.content.length>2500?'\n\n... truncated — download for full file':''}</div></div></div></div>`;
 }
 
 function fmt(b){if(!b||b<1024)return(b||0)+' B';if(b<1048576)return(b/1024).toFixed(1)+' KB';return(b/1048576).toFixed(2)+' MB';}
